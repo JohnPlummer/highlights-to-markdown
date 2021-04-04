@@ -4,7 +4,7 @@
   "description": "Add a 'Download Highlights' button to Instapaper articles",
   "version": "1.0",
   "manifest_version": 3,
-  "permissions": ["activeTab"],
+  "permissions": [],
   "content_scripts": [
     {
       "matches": ["*://*.instapaper.com/read/*"],
