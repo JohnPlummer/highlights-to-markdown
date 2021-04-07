@@ -9,19 +9,19 @@ function addButton() {
 }
 
 function createDownloadLink() {
-  var anchor = document.createElement("a");
+  let anchor = document.createElement("a");
   anchor.innerText = "Download Highlights";
   anchor.onclick = download;
   anchor.href = "#";
 
-  var div = document.createElement("div");
+  let div = document.createElement("div");
   div.appendChild(anchor);
 
   return div;
 }
 
 function download() {
-  var link = document.createElement("a");
+  let link = document.createElement("a");
   link.download = filename();
   link.href = createHref();
   link.click();
@@ -45,25 +45,68 @@ function createHref() {
 }
 
 function content() {
-  var content = "# " + title() + "\n\n";
+  let content = "# " + title() + "\n\n";
   content += "Article on [Instapaper](" + window.location.href + ")\n\n";
-
-  highlights().forEach((h) => (content += "> " + h + "\n\n"));
+  content += annotations().join("\n\n");
 
   return content;
 }
 
-function highlights() {
+function annotations() {
+  const highlights = getHighlights();
+  const notes = getNotes();
+
+  let array = new Array();
+  highlights.forEach(function (highlight, rel) {
+    array.push(highlight.get("content"));
+    console.log(highlight.get("content"));
+    if (notes.has(rel)) {
+      array.push("> " + notes.get(rel));
+      console.log(notes.get(rel));
+    }
+  });
+  return array;
+}
+
+function getHighlights() {
   const spans = document.querySelectorAll("span.highlight");
-  var id_map = new Map();
+  let map = new Map();
+
   spans.forEach(function (span) {
-    id = span.getAttribute("data-api-id");
-    if (id_map.has(id)) {
-      id_map.set(id, id_map.get(id) + span.innerText);
+    const rel = span.getAttribute("rel");
+    const id = span.getAttribute("data-api-id");
+    const text = span.innerText;
+    if (map.has(rel)) {
+      let content = map.get(rel).get("content");
+      map.get(rel).set("content", content + text);
     } else {
-      id_map.set(id, span.innerText);
+      map.set(
+        rel,
+        new Map([
+          ["id", id],
+          ["content", text],
+        ])
+      );
     }
   });
 
-  return Array.from(id_map.values());
+  return map;
+}
+
+function getNotes() {
+  const spans = document.querySelectorAll("span.ipnote");
+  let map = new Map();
+
+  spans.forEach(function (span) {
+    const rel = span.getAttribute("rel");
+    const text = span.getAttribute("data-comment");
+    if (map.has(rel)) {
+      let content = map.get(rel);
+      map.set(rel, content + text);
+    } else {
+      map.set(rel, text);
+    }
+  });
+
+  return map;
 }
